@@ -30,9 +30,8 @@ body {
 #ui-container {
     position: absolute;
     top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 97.5cqw;
+    left: 0;
+    width: 100cqw;
     height: 13cqh;
     z-index: 10;
     pointer-events: none;
