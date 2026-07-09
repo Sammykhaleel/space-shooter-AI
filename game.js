@@ -122,7 +122,7 @@ function spawnEnemy() {
     if (stage3BossSpawned && !stage3BossDefeated) return;
     if (isVictory) return;
     if (enemies.some(e => e.type === 'boss1' || e.type === 'boss2' || e.type === 'boss3')) return;
-    
+
     // Enemy spawning probability increases slightly with stage
     const spawnChance = 0.02 + (stageLevel * 0.005);
     if (Math.random() < spawnChance) {
@@ -582,17 +582,17 @@ function update() {
                     const isBoss2 = enemy.type === 'boss2';
                     const isBoss3 = enemy.type === 'boss3';
                     const isAnyBoss = isBoss1 || isBoss2 || isBoss3;
-                    
+
                     // Fully destroyed (Spawn animated explosion at center of ship)
-                    explosions.push({ 
-                        x: enemy.x + enemy.width / 2, 
-                        y: enemy.y + enemy.height / 2, 
+                    explosions.push({
+                        x: enemy.x + enemy.width / 2,
+                        y: enemy.y + enemy.height / 2,
                         timer: isAnyBoss ? 75 : (isHeavy ? 35 : 25),
                         maxTimer: isAnyBoss ? 75 : (isHeavy ? 35 : 25),
                         size: isAnyBoss ? 350 : (isHeavy ? 200 : 120),
                         type: isAnyBoss ? 'boss' : (isHeavy ? 'heavy' : 'standard')
                     });
-                    
+
                     if (isBoss1) {
                         stage1BossDefeated = true;
                         textNotifications.push({
@@ -1022,7 +1022,7 @@ function draw() {
         ctx.fillStyle = '#ffffff';
         ctx.font = '10px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
-        
+
         let bossTitle = 'STAGE 1 BOSS';
         if (activeBoss.type === 'boss2') bossTitle = 'STAGE 2 BOSS';
         if (activeBoss.type === 'boss3') bossTitle = 'STAGE 3 BOSS';
