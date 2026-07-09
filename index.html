@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Wars Space Shooter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Level Selection Overlay -->
+        <div id="level-select-screen">
+            <h1 class="level-select-title">SELECT STAGE</h1>
+            <div class="level-cards">
+                <div class="level-card" id="select-stage-1">
+                    <div class="level-preview" style="background-image: url('assets/background.png');"></div>
+                    <div class="level-info">
+                        <h3>STAGE 1</h3>
+                        <p>DEEP SPACE</p>
+                    </div>
+                </div>
+                <div class="level-card" id="select-stage-2">
+                    <div class="level-preview" style="background-image: url('assets/background2.png');"></div>
+                    <div class="level-info">
+                        <h3>STAGE 2</h3>
+                        <p>DESERT CANYON</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- The UI overlay (Image provided by user will go here) -->
+        <div id="ui-container">
+            <img id="ui-overlay" src="assets/ui.png" alt="Game UI" onerror="this.style.display='none'">
+            <div id="ui-score" class="ui-value">0000000</div>
+            <div id="ui-highscore" class="ui-value">0125000</div>
+            <div id="ui-stage" class="ui-value">1-1</div>
+            <div id="ui-lives" class="ui-value">❤️❤️❤️</div>
+            <div id="ui-health" class="ui-value">
+                <span class="health-block active"></span>
+                <span class="health-block active"></span>
+                <span class="health-block active"></span>
+                <span class="health-block active"></span>
+                <span class="health-block active"></span>
+            </div>
+        </div>
+        
+        <!-- The Game Canvas -->
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <!-- Load Game Logic -->
+    <script src="game.js"></script>
+</body>
+</html>
