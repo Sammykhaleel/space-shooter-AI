@@ -58,7 +58,7 @@ body {
 #ui-score {
     top: 9%;
     left: 15.6%;
-    width: 23%;
+    width: 16%;
     height: 36%;
     color: #fff;
     font-size: 2.25cqw;
@@ -68,7 +68,7 @@ body {
 #ui-highscore {
     top: 9%;
     left: 65.4%;
-    width: 23%;
+    width: 16%;
     height: 36%;
     color: #fff;
     font-size: 2.25cqw;
@@ -76,13 +76,14 @@ body {
 }
 
 #ui-stage {
-    top: 52%;
-    left: 88.0%;
+    top: 55%;
+    left: 87.2%;
     width: 9%;
-    height: 25%;
+    height: 30%;
     color: #fff;
     font-size: 1.5cqw;
     letter-spacing: 0.1cqw;
+    justify-content: center;
 }
 
 #ui-lives {
