@@ -9,6 +9,8 @@ let stage1BossSpawned = false;
 let stage1BossDefeated = false;
 let stage2BossSpawned = false;
 let stage2BossDefeated = false;
+let stage3BossSpawned = false;
+let stage3BossDefeated = false;
 let menuTransitionCooldown = 0;
 let score = 0;
 let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 125000;
@@ -17,6 +19,7 @@ let stageSubLevel = 1;
 let last1UpScore = 0;
 let textNotifications = [];
 let bgTransitionAlpha = 0;
+let bgTransitionAlpha3 = 0;
 
 // Inputs
 const keys = {
@@ -47,6 +50,7 @@ window.addEventListener('keyup', (e) => {
 const assets = {
     bg: new Image(),
     bg2: new Image(),
+    bg3: new Image(),
     hero: new Image(),
     enemy: new Image(),
     laser: new Image(),
@@ -79,6 +83,7 @@ assets.laser.onload = () => {
 
 assets.bg.src = 'assets/background.png';
 assets.bg2.src = 'assets/background2.png';
+assets.bg3.src = 'assets/background3.png';
 assets.hero.src = 'assets/hero.png';
 assets.enemy.src = 'assets/enemy.png';
 assets.laser.src = 'assets/laser.png';
@@ -114,8 +119,9 @@ function spawnEnemy() {
     // Do not spawn enemies during boss fight or victory
     if (stage1BossSpawned && !stage1BossDefeated) return;
     if (stage2BossSpawned && !stage2BossDefeated) return;
+    if (stage3BossSpawned && !stage3BossDefeated) return;
     if (isVictory) return;
-    if (enemies.some(e => e.type === 'boss1' || e.type === 'boss2')) return;
+    if (enemies.some(e => e.type === 'boss1' || e.type === 'boss2' || e.type === 'boss3')) return;
     
     // Enemy spawning probability increases slightly with stage
     const spawnChance = 0.02 + (stageLevel * 0.005);
@@ -232,6 +238,8 @@ function update() {
             stage1BossDefeated = false;
             stage2BossSpawned = false;
             stage2BossDefeated = false;
+            stage3BossSpawned = false;
+            stage3BossDefeated = false;
             isLevelSelect = true;
             document.getElementById('level-select-screen').style.display = 'flex';
         }
@@ -307,6 +315,23 @@ function update() {
             speed: 5, // Stage 2 Boss speed = 5
             direction: 1,
             type: 'boss2',
+            health: 150,
+            maxHealth: 150
+        });
+    }
+
+    // Spawn Stage 3 Boss if Stage 2 Boss is defeated and score >= 45000 (which is 15k scored in Stage 3)
+    if (score >= 45000 && stage2BossDefeated && !stage3BossSpawned && !stage3BossDefeated && !isVictory) {
+        stage3BossSpawned = true;
+        console.log("Stage 3 Boss Spawned! Score:", score);
+        enemies.push({
+            x: canvas.width / 2 - 100,
+            y: 130, // Avoid top HUD banner overlap
+            width: 200,
+            height: 200,
+            speed: 6, // Stage 3 Boss speed = 6
+            direction: 1,
+            type: 'boss3',
             health: 200,
             maxHealth: 200
         });
@@ -445,7 +470,7 @@ function update() {
 
     // Update enemies
     enemies.forEach((enemy, i) => {
-        const isAnyBoss = enemy.type === 'boss1' || enemy.type === 'boss2';
+        const isAnyBoss = enemy.type === 'boss1' || enemy.type === 'boss2' || enemy.type === 'boss3';
         if (isAnyBoss) {
             // Boss moves only horizontally at the top
             enemy.x += enemy.speed * enemy.direction;
@@ -551,23 +576,23 @@ function update() {
 
                 // Subtract HP
                 enemy.health--;
-
                 if (enemy.health <= 0) {
                     const isHeavy = enemy.type === 2;
                     const isBoss1 = enemy.type === 'boss1';
                     const isBoss2 = enemy.type === 'boss2';
-                    const isAnyBoss = isBoss1 || isBoss2;
-
+                    const isBoss3 = enemy.type === 'boss3';
+                    const isAnyBoss = isBoss1 || isBoss2 || isBoss3;
+                    
                     // Fully destroyed (Spawn animated explosion at center of ship)
-                    explosions.push({
-                        x: enemy.x + enemy.width / 2,
-                        y: enemy.y + enemy.height / 2,
+                    explosions.push({ 
+                        x: enemy.x + enemy.width / 2, 
+                        y: enemy.y + enemy.height / 2, 
                         timer: isAnyBoss ? 75 : (isHeavy ? 35 : 25),
                         maxTimer: isAnyBoss ? 75 : (isHeavy ? 35 : 25),
                         size: isAnyBoss ? 350 : (isHeavy ? 200 : 120),
                         type: isAnyBoss ? 'boss' : (isHeavy ? 'heavy' : 'standard')
                     });
-
+                    
                     if (isBoss1) {
                         stage1BossDefeated = true;
                         textNotifications.push({
@@ -580,10 +605,21 @@ function update() {
                         });
                         console.log("Stage 1 Boss Defeated! Progression unlocked.");
                     } else if (isBoss2) {
-                        isVictory = true;
                         stage2BossDefeated = true;
+                        textNotifications.push({
+                            x: canvas.width / 2,
+                            y: canvas.height / 2 - 50,
+                            text: "STAGE 3 UNLOCKED!",
+                            timer: 120,
+                            maxTimer: 120,
+                            color: "#00ff88"
+                        });
+                        console.log("Stage 2 Boss Defeated! Stage 3 unlocked.");
+                    } else if (isBoss3) {
+                        isVictory = true;
+                        stage3BossDefeated = true;
                         menuTransitionCooldown = 90; // 1.5 second cooldown to show victory text
-                        console.log("Boss 2 Defeated! Victory triggered.");
+                        console.log("Boss 3 Defeated! Victory triggered.");
                     } else {
                         const dropChance = isHeavy ? 0.45 : 0.15;
                         if (Math.random() < dropChance) {
@@ -648,11 +684,17 @@ function update() {
         stageLevel = 1;
         stageSubLevel = Math.min(3, Math.floor(score / 5000) + 1);
         bgTransitionAlpha = 0;
-    } else {
+        bgTransitionAlpha3 = 0;
+    } else if (!stage2BossDefeated) {
         stageLevel = 2;
-        stageSubLevel = Math.floor((score - 15000) / 5000) + 1;
-        // Smoothly transition to Stage 2 background (takes ~3.3 seconds at 60fps)
+        stageSubLevel = Math.min(3, Math.floor((score - 15000) / 5000) + 1);
         bgTransitionAlpha = Math.min(1, bgTransitionAlpha + 0.005);
+        bgTransitionAlpha3 = 0;
+    } else {
+        stageLevel = 3;
+        stageSubLevel = Math.floor((score - 30000) / 5000) + 1;
+        bgTransitionAlpha = 1;
+        bgTransitionAlpha3 = Math.min(1, bgTransitionAlpha3 + 0.005);
     }
 
     // Check for 1UP every 10,000 points
@@ -689,6 +731,7 @@ function draw() {
     // Draw scrolling background
     let currentBg1 = assets.bg;
     let currentBg2 = assets.bg2;
+    let currentBg3 = assets.bg3;
 
     // Draw height with +1 pixel overlap to close gap
     const drawHeight = canvas.height + 1;
@@ -734,25 +777,37 @@ function draw() {
         drawTile(currentBg1, y2_main, 1.0 * (1 - bgTransitionAlpha), mirror2_main);
     }
 
-    if (bgTransitionAlpha > 0 && currentBg2.complete) {
+    const stage2Alpha = bgTransitionAlpha * (1 - bgTransitionAlpha3);
+    if (stage2Alpha > 0 && currentBg2.complete) {
         // Parallax layer (Stage 2)
-        drawTile(currentBg2, y1_para, 0.4 * bgTransitionAlpha, mirror1_para);
-        drawTile(currentBg2, y2_para, 0.4 * bgTransitionAlpha, mirror2_para);
+        drawTile(currentBg2, y1_para, 0.4 * stage2Alpha, mirror1_para);
+        drawTile(currentBg2, y2_para, 0.4 * stage2Alpha, mirror2_para);
 
         // Main layer (Stage 2)
-        drawTile(currentBg2, y1_main, 1.0 * bgTransitionAlpha, mirror1_main);
-        drawTile(currentBg2, y2_main, 1.0 * bgTransitionAlpha, mirror2_main);
+        drawTile(currentBg2, y1_main, 1.0 * stage2Alpha, mirror1_main);
+        drawTile(currentBg2, y2_main, 1.0 * stage2Alpha, mirror2_main);
     }
 
-    if (!currentBg1.complete && !currentBg2.complete) {
+    if (bgTransitionAlpha3 > 0 && currentBg3.complete) {
+        // Parallax layer (Stage 3)
+        drawTile(currentBg3, y1_para, 0.4 * bgTransitionAlpha3, mirror1_para);
+        drawTile(currentBg3, y2_para, 0.4 * bgTransitionAlpha3, mirror2_para);
+
+        // Main layer (Stage 3)
+        drawTile(currentBg3, y1_main, 1.0 * bgTransitionAlpha3, mirror1_main);
+        drawTile(currentBg3, y2_main, 1.0 * bgTransitionAlpha3, mirror2_main);
+    }
+
+    if (!currentBg1.complete && !currentBg2.complete && !currentBg3.complete) {
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Draw player shadow (if transitioning or in Stage 2)
-    if (!player.isDead && bgTransitionAlpha > 0 && assets.hero.complete) {
+    // Draw player shadow (if transitioning or in Stage 2/3)
+    const shadowAlpha = Math.max(bgTransitionAlpha, bgTransitionAlpha3);
+    if (!player.isDead && shadowAlpha > 0 && assets.hero.complete) {
         ctx.save();
-        ctx.globalAlpha = 0.25 * bgTransitionAlpha;
+        ctx.globalAlpha = 0.25 * shadowAlpha;
         ctx.filter = 'brightness(0) blur(2px)';
         ctx.drawImage(assets.hero, player.x + 15, player.y + 25, player.width, player.height);
         ctx.restore();
@@ -808,14 +863,15 @@ function draw() {
         }
     });
 
-    // Draw enemy shadows first (if transitioning or in Stage 2)
-    if (bgTransitionAlpha > 0) {
+    // Draw enemy shadows first (if transitioning or in Stage 2/3)
+    const shadowAlpha_enemy = Math.max(bgTransitionAlpha, bgTransitionAlpha3);
+    if (shadowAlpha_enemy > 0) {
         enemies.forEach(enemy => {
             if (assets.enemy.complete) {
                 ctx.save();
-                ctx.globalAlpha = 0.25 * bgTransitionAlpha;
+                ctx.globalAlpha = 0.25 * shadowAlpha_enemy;
                 ctx.filter = 'brightness(0) blur(2px)';
-                const isAnyBoss = enemy.type === 'boss1' || enemy.type === 'boss2';
+                const isAnyBoss = enemy.type === 'boss1' || enemy.type === 'boss2' || enemy.type === 'boss3';
                 const shadowOffsetX = 18 + (enemy.type === 2 ? 8 : (isAnyBoss ? 25 : 0)); // Drop-offset representing flight altitude
                 const shadowOffsetY = 24 + (enemy.type === 2 ? 12 : (isAnyBoss ? 35 : 0));
 
@@ -833,7 +889,7 @@ function draw() {
 
     // Draw enemies
     enemies.forEach(enemy => {
-        const isAnyBoss = enemy.type === 'boss1' || enemy.type === 'boss2';
+        const isAnyBoss = enemy.type === 'boss1' || enemy.type === 'boss2' || enemy.type === 'boss3';
         if (isAnyBoss) {
             // Draw red heavy boss enemy
             if (assets.enemyBoss) {
@@ -946,7 +1002,7 @@ function draw() {
     });
 
     // Draw boss health bar if active
-    let activeBoss = enemies.find(e => e.type === 'boss1' || e.type === 'boss2');
+    let activeBoss = enemies.find(e => e.type === 'boss1' || e.type === 'boss2' || e.type === 'boss3');
     if (activeBoss) {
         const barW = canvas.width * 0.6;
         const barH = 12;
@@ -966,7 +1022,11 @@ function draw() {
         ctx.fillStyle = '#ffffff';
         ctx.font = '10px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(activeBoss.type === 'boss1' ? 'STAGE 1 BOSS' : 'STAGE 2 BOSS', canvas.width / 2, barY - 6);
+        
+        let bossTitle = 'STAGE 1 BOSS';
+        if (activeBoss.type === 'boss2') bossTitle = 'STAGE 2 BOSS';
+        if (activeBoss.type === 'boss3') bossTitle = 'STAGE 3 BOSS';
+        ctx.fillText(bossTitle, canvas.width / 2, barY - 6);
     }
 
     // Game Over Text
@@ -1016,18 +1076,22 @@ document.getElementById('select-stage-1').addEventListener('click', () => {
 document.getElementById('select-stage-2').addEventListener('click', () => {
     selectStage(2);
 });
+document.getElementById('select-stage-3').addEventListener('click', () => {
+    selectStage(3);
+});
 
 function selectStage(stageNum) {
     isLevelSelect = false;
     document.getElementById('level-select-screen').style.display = 'none';
 
-    score = stageNum === 1 ? 0 : 15000;
-    last1UpScore = stageNum === 1 ? 0 : 10000;
+    score = stageNum === 1 ? 0 : (stageNum === 2 ? 15000 : 30000);
+    last1UpScore = stageNum === 1 ? 0 : (stageNum === 2 ? 10000 : 30000);
     bgTransitionAlpha = stageNum === 1 ? 0 : 1;
+    bgTransitionAlpha3 = stageNum === 3 ? 1 : 0;
 
     player.lives = 3;
     player.health = player.maxHealth;
-    player.weaponLevel = stageNum === 1 ? 1 : 3; // Start with wing lasers on stage 2
+    player.weaponLevel = stageNum === 1 ? 1 : (stageNum === 2 ? 3 : 4); // Upgrade level based on stage select
     player.invincible = 0;
     player.isDead = false;
     player.respawnTimer = 0;
@@ -1040,8 +1104,10 @@ function selectStage(stageNum) {
     powerups = [];
     isGameOver = false;
     isVictory = false;
-    stage1BossSpawned = stageNum === 2;
-    stage1BossDefeated = stageNum === 2;
-    stage2BossSpawned = false;
-    stage2BossDefeated = false;
+    stage1BossSpawned = stageNum >= 2;
+    stage1BossDefeated = stageNum >= 2;
+    stage2BossSpawned = stageNum === 3;
+    stage2BossDefeated = stageNum === 3;
+    stage3BossSpawned = false;
+    stage3BossDefeated = false;
 }
