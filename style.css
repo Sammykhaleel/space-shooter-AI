@@ -29,7 +29,7 @@ body {
 
 #ui-container {
     position: absolute;
-    top: 1.6cqh;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 97.5cqw;
